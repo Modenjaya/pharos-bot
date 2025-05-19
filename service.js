@@ -18,7 +18,17 @@ const RPC_URL = "https://testnet.dplabs-internal.com";
 
 // Utility to generate random amount in range (inclusive, in PHRS)
 function getRandomAmount(min, max) {
-  const amount = (Math.random() * (max - min) + min).toFixed(4); // 4 decimal places
+  // Pastikan nilai min dan max valid dan dalam format yang benar
+  min = parseFloat(min);
+  max = parseFloat(max);
+  
+  if (isNaN(min) || isNaN(max) || min < 0 || max <= min) {
+    console.error("Invalid min/max values for random amount");
+    return e.parseEther("0.01"); // Default fallback
+  }
+  
+  const amount = (Math.random() * (max - min) + min).toFixed(6); // Gunakan 6 decimal places untuk presisi lebih tinggi
+  console.log(`Generated random amount: ${amount} PHRS`); // Log untuk debugging
   return e.parseEther(amount);
 }
 
@@ -53,8 +63,13 @@ async function performSwapUSDC(logger) {
     try {
       let r = new e.Wallet(t, pharos.provider());
       let o = r.address;
-      let i = getRandomAmount(0.2, 0.9); // Random amount between 0.2 and 0.9 PHRS
+      
+      // Gunakan nilai yang lebih kecil (0.01-0.02)
+      let i = getRandomAmount(0.01, 0.02);
       let amountStr = e.formatEther(i);
+      
+      logger(`System | ${$} | Preparing to swap ${amountStr} PHRS to USDC`);
+      
       let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDC.slice(2).padStart(64, "0");
       let n = i.toString(16).padStart(64, "0");
       let l =
@@ -68,18 +83,46 @@ async function performSwapUSDC(logger) {
       let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
       let p = new e.Contract(contract.SWAP, d, r);
       let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
-      await pharos.provider().getFeeData();
+      
+      // Get latest fee data
+      const feeData = await pharos.provider().getFeeData();
+      logger(`System | ${$} | Current gas price: ${e.formatUnits(feeData.gasPrice || 0, 'gwei')} gwei`);
+      
       for (let w = 1; w <= global.maxTransaction; w++) {
         logger(`System | ${$} | Initiating Swap ${amountStr} PHRS to USDC (${w}/${global.maxTransaction})`);
+        
+        // Persiapkan transaction
         let g = {
           to: p.target,
           data: f,
           value: i,
         };
-        g.gasLimit = (await pharos.provider().estimateGas(g)) * 12n / 10n;
-        let m = await r.sendTransaction(g);
-        await m.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
+        
+        // Estimasi gas dengan error handling
+        try {
+          g.gasLimit = await pharos.provider().estimateGas(g);
+          // Tambahkan margin 20% untuk gas limit
+          g.gasLimit = g.gasLimit * 12n / 10n;
+          logger(`System | ${$} | Estimated gas limit: ${g.gasLimit.toString()}`);
+        } catch (gasError) {
+          logger(`System | ${$} | Gas estimation failed: ${gasError.message}`);
+          logger(`System | ${$} | Using default gas limit: 300000`);
+          g.gasLimit = 300000;
+        }
+        
+        try {
+          let m = await r.sendTransaction(g);
+          logger(`System | ${$} | Transaction sent: ${m.hash}`);
+          await m.wait(1);
+          logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
+        } catch (txError) {
+          logger(`System | ${$} | Transaction failed: ${txError.message}`);
+          // Check if error contains useful information
+          if (txError.reason) {
+            logger(`System | ${$} | Reason: ${txError.reason}`);
+          }
+        }
+        
         await etc.delay(5e3);
       }
     } catch (u) {
@@ -98,8 +141,13 @@ async function performSwapUSDT(logger) {
     try {
       let r = new e.Wallet(t, pharos.provider());
       let o = r.address;
-      let i = getRandomAmount(0.2, 0.9); // Random amount between 0.2 and 0.9 PHRS
+      
+      // Gunakan nilai yang lebih kecil (0.01-0.02) 
+      let i = getRandomAmount(0.01, 0.02);
       let amountStr = e.formatEther(i);
+      
+      logger(`System | ${$} | Preparing to swap ${amountStr} PHRS to USDT`);
+      
       let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDT.slice(2).padStart(64, "0");
       let n = i.toString(16).padStart(64, "0");
       let l =
@@ -113,18 +161,46 @@ async function performSwapUSDT(logger) {
       let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
       let p = new e.Contract(contract.SWAP, d, r);
       let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
-      await pharos.provider().getFeeData();
+      
+      // Get latest fee data
+      const feeData = await pharos.provider().getFeeData();
+      logger(`System | ${$} | Current gas price: ${e.formatUnits(feeData.gasPrice || 0, 'gwei')} gwei`);
+      
       for (let w = 1; w <= global.maxTransaction; w++) {
         logger(`System | ${$} | Initiating Swap ${amountStr} PHRS to USDT (${w}/${global.maxTransaction})`);
+        
+        // Persiapkan transaction
         let g = {
           to: p.target,
           data: f,
           value: i,
         };
-        g.gasLimit = (await pharos.provider().estimateGas(g)) * 12n / 10n;
-        let m = await r.sendTransaction(g);
-        await m.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
+        
+        // Estimasi gas dengan error handling
+        try {
+          g.gasLimit = await pharos.provider().estimateGas(g);
+          // Tambahkan margin 20% untuk gas limit
+          g.gasLimit = g.gasLimit * 12n / 10n;
+          logger(`System | ${$} | Estimated gas limit: ${g.gasLimit.toString()}`);
+        } catch (gasError) {
+          logger(`System | ${$} | Gas estimation failed: ${gasError.message}`);
+          logger(`System | ${$} | Using default gas limit: 300000`);
+          g.gasLimit = 300000;
+        }
+        
+        try {
+          let m = await r.sendTransaction(g);
+          logger(`System | ${$} | Transaction sent: ${m.hash}`);
+          await m.wait(1);
+          logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
+        } catch (txError) {
+          logger(`System | ${$} | Transaction failed: ${txError.message}`);
+          // Check if error contains useful information
+          if (txError.reason) {
+            logger(`System | ${$} | Reason: ${txError.reason}`);
+          }
+        }
+        
         await etc.delay(5e3);
       }
     } catch (u) {
@@ -163,12 +239,19 @@ async function addLpUSDC(logger) {
       let r = new e.Wallet(t, pharos.provider());
       let o = new e.Contract(contract.ROUTER, abi.ROUTER, r);
       let i = Math.floor(Date.now() / 1e3) + 1800;
+      
+      // Check and approve USDC
       let l = await checkBalanceAndApprove(r, contract.USDC, contract.ROUTER, logger);
       if (!l) {
         continue;
       }
-      let amount = getRandomAmount(0.2, 0.5); // Random amount between 0.2 and 0.5
+      
+      // Gunakan nilai yang lebih kecil (0.01-0.02)
+      let amount = getRandomAmount(0.01, 0.02);
       let amountStr = e.formatEther(amount);
+      
+      logger(`System | ${$} | Preparing to add liquidity with ${amountStr} PHRS + USDC`);
+      
       let c = {
         token0: contract.WPHRS,
         token1: contract.USDC,
@@ -182,19 +265,33 @@ async function addLpUSDC(logger) {
         recipient: r.address,
         deadline: i,
       };
+      
       let d = o.interface.encodeFunctionData("mint", [c]);
       let p = o.interface.encodeFunctionData("refundETH", []);
       let f = [d, p];
+      
       for (let w = 1; w <= global.maxTransaction; w++) {
         logger(
           `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDC (${w}/${global.maxTransaction})`
         );
-        let g = await o.multicall(f, {
-          value: amount,
-          gasLimit: 5e5,
-        });
-        await g.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        
+        try {
+          let g = await o.multicall(f, {
+            value: amount,
+            gasLimit: 5e5, // Use fixed gas limit for add liquidity
+          });
+          
+          logger(`System | ${$} | Transaction sent: ${g.hash}`);
+          await g.wait(1);
+          logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        } catch (txError) {
+          logger(`System | ${$} | Transaction failed: ${txError.message}`);
+          // Check if error contains useful information
+          if (txError.reason) {
+            logger(`System | ${$} | Reason: ${txError.reason}`);
+          }
+        }
+        
         await etc.delay(5e3);
       }
     } catch (m) {
@@ -214,12 +311,19 @@ async function addLpUSDT(logger) {
       let r = new e.Wallet(t, pharos.provider());
       let o = new e.Contract(contract.ROUTER, abi.ROUTER, r);
       let i = Math.floor(Date.now() / 1e3) + 1800;
+      
+      // Check and approve USDT
       let l = await checkBalanceAndApprove(r, contract.USDT, contract.ROUTER, logger);
       if (!l) {
         continue;
       }
-      let amount = getRandomAmount(0.2, 0.5); // Random amount between 0.2 and 0.5
+      
+      // Gunakan nilai yang lebih kecil (0.01-0.02)
+      let amount = getRandomAmount(0.01, 0.02);
       let amountStr = e.formatEther(amount);
+      
+      logger(`System | ${$} | Preparing to add liquidity with ${amountStr} PHRS + USDT`);
+      
       let c = {
         token0: contract.WPHRS,
         token1: contract.USDT,
@@ -233,19 +337,33 @@ async function addLpUSDT(logger) {
         recipient: r.address,
         deadline: i,
       };
+      
       let d = o.interface.encodeFunctionData("mint", [c]);
       let p = o.interface.encodeFunctionData("refundETH", []);
       let f = [d, p];
+      
       for (let w = 1; w <= global.maxTransaction; w++) {
         logger(
           `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDT (${w}/${global.maxTransaction})`
         );
-        let g = await o.multicall(f, {
-          value: amount,
-          gasLimit: 5e5,
-        });
-        await g.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        
+        try {
+          let g = await o.multicall(f, {
+            value: amount,
+            gasLimit: 5e5, // Use fixed gas limit for add liquidity
+          });
+          
+          logger(`System | ${$} | Transaction sent: ${g.hash}`);
+          await g.wait(1);
+          logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        } catch (txError) {
+          logger(`System | ${$} | Transaction failed: ${txError.message}`);
+          // Check if error contains useful information
+          if (txError.reason) {
+            logger(`System | ${$} | Reason: ${txError.reason}`);
+          }
+        }
+        
         await etc.delay(5e3);
       }
     } catch (m) {
