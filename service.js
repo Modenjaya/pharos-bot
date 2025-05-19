@@ -13,7 +13,7 @@ const contract = chains.utils.contract;
 
 // Constants for Unlimited Faucet
 const BASE_API = "https://api.pharosnetwork.xyz";
-const REF_CODE = "PNFXEcz1CWezuu3g";
+const REF_CODE = "fPE8bXZfQp25MHsz";
 const RPC_URL = "https://testnet.dplabs-internal.com";
 
 // Utility to generate random amount in range (inclusive, in PHRS)
