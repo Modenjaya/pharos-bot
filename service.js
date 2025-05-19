@@ -65,7 +65,7 @@ async function performSwapUSDC(logger) {
       let o = r.address;
       
       // Gunakan nilai yang lebih kecil (0.01-0.02)
-      let i = getRandomAmount(0.01, 0.02);
+      let i = getRandomAmount(0.001, 0.002);
       let amountStr = e.formatEther(i);
       
       logger(`System | ${$} | Preparing to swap ${amountStr} PHRS to USDC`);
@@ -143,7 +143,7 @@ async function performSwapUSDT(logger) {
       let o = r.address;
       
       // Gunakan nilai yang lebih kecil (0.01-0.02) 
-      let i = getRandomAmount(0.01, 0.02);
+      let i = getRandomAmount(0.001, 0.005);
       let amountStr = e.formatEther(i);
       
       logger(`System | ${$} | Preparing to swap ${amountStr} PHRS to USDT`);
@@ -247,7 +247,7 @@ async function addLpUSDC(logger) {
       }
       
       // Gunakan nilai yang lebih kecil (0.01-0.02)
-      let amount = getRandomAmount(0.01, 0.02);
+      let amount = getRandomAmount(0.001, 0.002);
       let amountStr = e.formatEther(amount);
       
       logger(`System | ${$} | Preparing to add liquidity with ${amountStr} PHRS + USDC`);
@@ -319,7 +319,7 @@ async function addLpUSDT(logger) {
       }
       
       // Gunakan nilai yang lebih kecil (0.01-0.02)
-      let amount = getRandomAmount(0.01, 0.02);
+      let amount = getRandomAmount(0.001, 0.002);
       let amountStr = e.formatEther(amount);
       
       logger(`System | ${$} | Preparing to add liquidity with ${amountStr} PHRS + USDT`);
