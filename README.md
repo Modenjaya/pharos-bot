@@ -80,6 +80,34 @@ npm install
 ```
 nano wallet.json
 ```
+
+IF WANT TO RUN MULTIPLE 
+```
+{
+  "wallets": [
+    {
+      "name": "wallet1",
+      "privatekey": "private_key_1"
+    },
+    {
+      "name": "wallet2",
+      "privatekey": "private_key_2"
+    },
+    {
+      "name": "wallet3",
+      "privatekey": "private_key_3"
+    },
+    {
+      "name": "wallet4",
+      "privatekey": "private_key_4"
+    },
+    {
+      "name": "wallet5",
+      "privatekey": "private_key_5"
+    }
+  ]
+}
+```
 # or use any code editor
 
 # Put Your `wallet` Adddress in `wallet.txt`
